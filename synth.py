@@ -54,6 +54,25 @@ shell.run(
     cwd=repository
 )
 
+class Service:
+    name: str = None
+    title: str = None
+    version: str = None
+    file: str = None
+
+    def __init__(self, discovery_path: str):
+        self.file = discovery_path
+        match = re.match(VERSION_REGEX, path.basename(discovery_path))
+        if match is not None:
+          self.name = match[1]
+          self.version = match[2]
+
+          with open(discovery_path, "r") as f:
+              data = json.load(f)
+              self.title = data["title"]
+        else:
+            print(path.basename(discovery_path))
+
 def write_metadata_file(name: str, version: str, metadata: dict):
     metadata_file = f'clients/{name}/{version}.metadata.json'
     print(f"Writing json metadata to {metadata_file}")
@@ -81,49 +100,55 @@ def maven_metadata(pom_file: str):
         "version": version
     }
 
-def generate_service(disco: str):
+def generate_service_version(service: Service, template: str):
+    log.info(f"\t{template}")
 
-    m = re.search(VERSION_REGEX, disco)
-    if m is None:
+    library_name = f"google-api-services-{service.name}"
+    output_dir = repository / ".cache" / library_name / service.version
+
+    command = (
+        f"python2 -m googleapis.codegen"
+        f" --output_dir={output_dir}" +
+        f" --input={service.file}" +
+        f" --language=java" +
+        f" --language_variant={template}" +
+        f" --package_path=api/services"
+    )
+
+    shell.run(f"mkdir -p {output_dir}".split(), cwd=repository / "generator")
+    shell.run(command.split(), cwd=repository, hide_output=False)
+
+    s.copy(output_dir, f"clients/{library_name}/{service.version}/{template}")
+
+    resource_dir = repository / "clients" / library_name / service.version / template / "resources"
+    shell.run(f"mkdir -p {resource_dir}".split())
+    shutil.copy(service.file, resource_dir / path.basename(service.file))
+
+def generate_service(disco: str):
+    service = Service(discovery / "discoveries" / disco)
+    if service.version is None:
         log.info(f"Skipping {disco}.")
         return
 
-    name = m.group(1)
-    version = m.group(2)
-
-    log.info(f"Generating {name} {version}.")
-
-    library_name = f"google-api-services-{name}"
-    output_dir = repository / ".cache" / library_name / version
-    input_file = discovery / "discoveries" / disco
+    log.info(f"Generating {service.name} {service.version}.")
+    library_name = f"google-api-services-{service.name}"
 
     for template in TEMPLATE_VERSIONS:
-        log.info(f"\t{template}")
+        generate_service_version(service, template)
 
-        command = (
-            f"python2 -m googleapis.codegen --output_dir={output_dir}" +
-            f" --input={input_file} --language=java --language_variant={template}" +
-            f" --package_path=api/services"
-        )
+    # generate latest version
+    generate_service_version(service, "latest")
 
-        shell.run(f"mkdir -p {output_dir}".split(), cwd=repository / "generator")
-        shell.run(command.split(), cwd=repository, hide_output=False)
-
-        s.copy(output_dir, f"clients/{library_name}/{version}/{template}")
-
-        resource_dir = repository / "clients" / library_name / version / template / "resources"
-        shell.run(f"mkdir -p {resource_dir}".split())
-        shutil.copy(input_file, resource_dir / path.basename(disco))
 
     # write the metadata file
-    latest_version = TEMPLATE_VERSIONS[-1]
-    metadata = maven_metadata(str(repository / "clients" / library_name / version / latest_version / "pom.xml"))
-    write_metadata_file(library_name, version, metadata)
+    latest_version = "latest"
+    metadata = maven_metadata(str(repository / "clients" / library_name / service.version / latest_version / "pom.xml"))
+    write_metadata_file(library_name, service.version, metadata)
 
     # copy the latest README to the main service location
     shutil.copy(
-        repository / "clients" / library_name / version / latest_version / "README.md",
-        repository / "clients" / library_name / version / "README.md"
+        repository / "clients" / library_name / service.version / latest_version / "README.md",
+        repository / "clients" / library_name / service.version / "README.md"
     )
 
 def all_discoveries():
@@ -132,23 +157,6 @@ def all_discoveries():
         discos.append(path.basename(file))
 
     return discos
-
-class Service:
-    id: str = None
-    title: str = None
-    version: str = None
-
-    def __init__(self, discovery_path: str):
-        match = re.match(VERSION_REGEX, path.basename(discovery_path))
-        if match is not None:
-          self.id = match[1]
-          self.version = match[2]
-
-          with open(discovery_path, "r") as f:
-              data = json.load(f)
-              self.title = data["title"]
-        else:
-            print(path.basename(discovery_path))
 
 def all_services():
     services = []
@@ -161,7 +169,7 @@ def all_services():
 
 def service_row(services: List[Service]) -> str:
   services = sorted(services, key=lambda service: service.version)
-  links = [f"[{service.version}](clients/google-api-services-{service.id}/{service.version})" for service in services]
+  links = [f"[{service.version}](clients/google-api-services-{service.name}/{service.version})" for service in services]
   link = ", ".join(links)
   name = services[0].title
   return f"| {name} | {link} |\n"
@@ -193,7 +201,7 @@ def generate_service_list():
     services_by_name = {}
     for service in services:
         if service.title is None:
-            print(service.id)
+            print(service.name)
 
         if service.title not in services_by_name:
             services_by_name[service.title] = []
