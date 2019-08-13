@@ -70,7 +70,14 @@ def GetMavenVersion(api, language_version):
   return '%s-%s-SNAPSHOT' % (api['version'], language_version)
 
 
-def GetMavenMetadata(api, language_version):
+def GetMavenMetadata(api, language_version, options):
+  if options.get('artifact_name') is not None:
+    return {
+      'artifact_id': options.get('artifact_name'),
+      'group_id': options.get('artifact_scope'),
+      'version': options.get('artifact_version'),
+    }
+
   """Returns a dict of useful maven metadata."""
   owner_domain = api.get('ownerDomain', 'google.com')
   return {

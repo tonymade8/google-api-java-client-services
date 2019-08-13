@@ -34,9 +34,9 @@ logging.basicConfig(level=logging.DEBUG)
 VERSION_REGEX = r"([^\.]*)\.(.+)\.json$"
 
 TEMPLATE_VERSIONS = [
-    "1.28.0",
-    "1.29.2",
-    "1.30.1",
+    # "1.28.0",
+    # "1.29.2",
+    # "1.30.1",
 ]
 discovery_url = "https://github.com/googleapis/discovery-artifact-manager.git"
 
@@ -100,23 +100,25 @@ def maven_metadata(pom_file: str):
         "version": version
     }
 
-def generate_service_version(service: Service, template: str):
+def generate_service_version(service: Service, template: str, extra_args: List[str] = []):
     log.info(f"\t{template}")
 
     library_name = f"google-api-services-{service.name}"
     output_dir = repository / ".cache" / library_name / service.version
 
-    command = (
-        f"python2 -m googleapis.codegen"
-        f" --output_dir={output_dir}" +
-        f" --input={service.file}" +
-        f" --language=java" +
-        f" --language_variant={template}" +
-        f" --package_path=api/services"
-    )
+    command = [
+        "python2",
+        "-m",
+        "googleapis.codegen",
+        f"--output_dir={output_dir}",
+        f"--input={service.file}",
+        "--language=java",
+        f"--language_variant={template}",
+        f"--package_path=api/services",
+    ] + extra_args
 
     shell.run(f"mkdir -p {output_dir}".split(), cwd=repository / "generator")
-    shell.run(command.split(), cwd=repository, hide_output=False)
+    shell.run(command, cwd=repository, hide_output=False)
 
     s.copy(output_dir, f"clients/{library_name}/{service.version}/{template}")
 
@@ -137,8 +139,13 @@ def generate_service(disco: str):
         generate_service_version(service, template)
 
     # generate latest version
-    generate_service_version(service, "latest")
-
+    artifact_version = "0.1.0" # FIXME
+    generate_service_version(service, "latest", extra_args=[
+        "--version_package",
+        f"--artifact_name={service.name}-{service.version}",
+        f"--artifact_version={artifact_version}",
+        f"--artifact_scope=com.google.api.services"
+    ])
 
     # write the metadata file
     latest_version = "latest"

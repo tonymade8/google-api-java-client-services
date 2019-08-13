@@ -54,7 +54,7 @@ class BaseJavaGenerator(api_library_generator.ApiLibraryGenerator):
     """Annotate the Api dictionary with Java specifics."""
     the_api.SetTemplateValue(
         'maven',
-        maven_utils.GetMavenMetadata(the_api, self.language_version),
+        maven_utils.GetMavenMetadata(the_api, self.language_version, self._options),
         'maven metadata')
 
   def AnnotateParameter(self, unused_method, parameter):

@@ -108,9 +108,15 @@ flags.DEFINE_string(
     )
 flags.DEFINE_bool('version_package', False, 'Put API version in package paths')
 flags.DEFINE_bool('verbose', False, 'Enable verbose logging')
+flags.DEFINE_string('artifact_name', None, 'Override the artifact name')
+flags.DEFINE_string('artifact_version', None, 'Override the artifact version')
+flags.DEFINE_string('artifact_scope', None, 'Override the artifact scope')
 
 flags.DECLARE_key_flag('api_name')
 flags.DECLARE_key_flag('api_version')
+flags.DECLARE_key_flag('artifact_name')
+flags.DECLARE_key_flag('artifact_scope')
+flags.DECLARE_key_flag('artifact_version')
 flags.DECLARE_key_flag('include_timestamp')
 flags.DECLARE_key_flag('input')
 flags.DECLARE_key_flag('language')
@@ -163,6 +169,9 @@ def main(unused_argv):
            version_package=FLAGS.version_package,
            package_path=FLAGS.package_path,
            output_type=FLAGS.output_type,
+           artifact_name=FLAGS.artifact_name,
+           artifact_scope=FLAGS.artifact_scope,
+           artifact_version=FLAGS.artifact_version,
            language=FLAGS.language,
            language_variant=FLAGS.language_variant)
   return 0
@@ -173,6 +182,9 @@ def Generate(discovery_doc, package_writer,
              version_package=False,
              package_path=None,
              output_type='plain',
+             artifact_name=None,
+             artifact_scope=None,
+             artifact_version=None,
              language='java',
              language_variant='default',
              callback=None):
@@ -186,6 +198,9 @@ def Generate(discovery_doc, package_writer,
       'version_package': version_package,
       # Custom package name
       'package_path': package_path,
+      'artifact_name': artifact_name,
+      'artifact_scope': artifact_scope,
+      'artifact_version': artifact_version,
       }
   if FLAGS.monolithic_source_name:
     options['useSingleSourceFile'] = True
