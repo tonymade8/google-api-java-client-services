@@ -70,7 +70,7 @@ deploy_library() {
 }
 
 EXIT_CODE=0
-for directory in `find clients -mindepth 3 -maxdepth 3 -type d | sort`
+for directory in `find clients/google-api-services-sql/ -mindepth 2 -maxdepth 2 -type d | sort`
 do
   service=$(echo ${directory} | cut -f2 -d'/' | cut -f4 -d'-')
   api_version=$(echo ${directory} | cut -f3 -d'/')
