@@ -1,15 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
 
   <groupId>com.google.apis</groupId>
   <artifactId>google-api-services-sql</artifactId>
-  <version>v1beta4-rev20201007-1.30.10</version>
-  <name>Cloud SQL Admin API v1beta4-rev20200828-1.30.10</name>
+  <version>v1beta4-rev20201026-1.30.10</version>
+  <name>Cloud SQL Admin API v1beta4-rev20201026-1.30.10</name>
   <packaging>jar</packaging>
 
   <inceptionYear>2011</inceptionYear>
@@ -32,9 +27,16 @@
       <id>ossrh</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
+
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+
     <relocation>
-      <artifactId>google-api-services-sqladmin</artifactId>
-      <version>v1beta4-rev20201007-1.30.10</version>
+       <groupId>com.google.apis</groupId>
+       <artifactId>google-api-services-sqladmin</artifactId>
+       <version>v1beta4-rev20201007-1.30.10</version>
     </relocation>
   </distributionManagement>
 
