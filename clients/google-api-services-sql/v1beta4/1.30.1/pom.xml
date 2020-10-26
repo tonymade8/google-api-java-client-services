@@ -7,9 +7,10 @@
   <name>Cloud SQL Admin API v1beta4-rev20201026-1.30.10</name>
   <packaging>jar</packaging>
 
-   <description>
+  <description>
     This artifact has been renamed to 'google-api-services-sqladmin'.
   </description>
+  <url>https://github.com/googleapis/google-api-java-client-services</url>
 
   <inceptionYear>2011</inceptionYear>
 
@@ -51,7 +52,7 @@
     <developerConnection>
       scm:git:https://github.com/googleapis/google-api-java-client-services.git
     </developerConnection>
-    <url>https://github.com/googleapis/google-api-java-client-services</url>
+    <url>https://github.com/googleapis/google-api-java-client-services.git</url>
     <tag>HEAD</tag>
   </scm>
 
